@@ -136,52 +136,46 @@
         localStorage.setItem('deviceId', DEVICE_ID);
         localStorage.setItem('browserId', BROWSER_ID);
 
-        // Replace the single API_TOKEN with a token pool
+        // Token distribution system
         const API_TOKENS = [
             "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NDgyMiwiaWF0IjoxNzM0NTYwODIyLCJqdGkiOiI1ODk0MTAwOTA2OTkyMzMzMyIsInBheWxvYWQiOnsiaWQiOiJjYTQ1NjMzMDVlZTk0OWNjMDZhNmEyYjVkZmUwNmM2NyIsImVtYWlsIjoidmxhZHZsYWQyNTQxQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDU2MDgyMDU5MiwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.clJJ9tdpjBq0MXFp-A0DdED8lMtZlpz3WC5m0mmX1r3WvAyNGTWXqEBsNpB1WSaCwF8CUCkahddkQ5kXIv5ETjRppowp7HE18XZ2f8jDO8Px9H-muc9iuwPyg02H5IvitItXCRlWdqFa2ErNdcaSvqswrpvPPZl2x33lRFGQgNTpW3rgJuNDUfGcrsLezi7y8KNiRGfVbZG888Plnq7Qm2LbeX2S8NeDjEhxY9i25Fw-4XY-fomgFPY1erFIDfqWfTCDDn3kvaxAjYsd-3oEU5D0sLe-C0GJMleiJE6g_EYb8mtvzGII1k9G4QrAeVSiLBy6RZkf_7b1JYvSBRU_PA",
-            "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NTY0MiwiaWF0IjoxNzM0NTYxNjQyLCJqdGkiOiI1ODk0MTg2OTQzMzgyMDE2NSIsInBheWxvYWQiOnsiaWQiOiI0YzBlOTE5ZmNjMzY4ZGRjMDNmMzQ5MmM2MGRhMmQ0ZCIsImVtYWlsIjoiOXNxcnQ5QGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDU2MTY0MDg5NiwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.MV_CN9AaHSdsMy5mg_E0Whjh1kcyomHN4C9EfJrTelVVo0j1w9qh1IaS3e4513W3re6oQgOhRqyPFvQT6QNUwX2h4zeDOYRtIXyKmugCgyD-rLqDgtjVWTXsFKgVnznLqZ7Kfk11brFLdBvxYsv9encOdNOKcAG1mKOmvF4t5eMcohd6xD5Zw1szI-LZbA_SeRhzuA1llY3H1YWT3ySu84q835KYyjaENw3-TiFM1ZyUuaBBchDHvVPON41Zhb0kmiF8ehmMDtNeQZ093luOtD6oO8GrhovCjaiX21zUMok-es8VMCxu6aR-Kd5QwAtiVy7TaVrTmyewE9i2abDLYA",
-            "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NTcwOSwiaWF0IjoxNzM0NTYxNzA5LCJqdGkiOiI1ODk0MTkzOTYxNTAxMTg0NSIsInBheWxvYWQiOnsiaWQiOiIwYzdiYWRmYzZiMmFhMGNiNDVjYzZlNGRmMjI0YzJkOSIsImVtYWlsIjoiZXZvY2hrYTU1OUBnbWFpbC5jb20iLCJjcmVhdGVfYXQiOjE3MzQ1NjE3MDc5NzgsInRva2VuX3N0YXR1cyI6MCwic3RhdHVzIjoxLCJpc3MiOiIifX0.AI9vVAPQ0-5VPSbQJqsVifKQvTYDrpYOd5NDcvK52ofMVeu8sP3_dAsXuPIQ8R67CcnLXhb_FykRh9BbpVQ5bjsEFdCf4AEXEOczQamn8cjNOHhrarOALabZdzj-5siZLLtb08hv6lSLXVDs0qpZjZ_nqaofcLm2_Vc59BsrVIpEdu_kJdJ-La558TsakB_JSnCxRlfxrD_eTIENGgQO9GdR1J7ibcIAZDtEsicBrPzRL-P_AleWujB8tGwB-tkSmEPKf50R8lUkqWOzDygYNeUf1u0LY576RsAre6ZaQy_xn_4SQmULiAid2FfdSF1Mewwc0vNdW2SNDMJkXP0tYQ",
-            // Add more tokens as needed
+            "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NTcwOSwiaWF0IjoxNzM0NTYxNzA5LCJqdGkiOiI1ODk0MTkzOTYxNTAxMTg0NSIsInBheWxvYWQiOnsiaWQiOiIwYzdiYWRmYzZiMmFhMGNiNDVjYzZlNGRmMjI0YzJkOSIsImVtYWlsIjoiZXZvY2hrYTU1OUBnbWFpbC5jb20iLCJjcmVhdGVfYXQiOjE3MzQ1NjE3MDc5NzgsInRva2VuX3N0YXR1cyI6MCwic3RhdHVzIjoxLCJpc3MiOiIifX0.AI9vVAPQ0-5VPSbQJqsVifKQvTYDrpYOd5NDcvK52ofMVeu8sP3_dAsXuPIQ8R67CcnLXhb_FykRh9BbpVQ5bjsEFdCf4AEXEOczQamn8cjNOHhrarOALabZdzj-5siZLLtb08hv6lSLXVDs0qpZjZ_nqaofcLm2_Vc59BsrVIpEdu_kJdJ-La558TsakB_JSnCxRlfxrD_eTIENGgQO9GdR1J7ibcIAZDtEsicBrPzRL-P_AleWujB8tGwB-tkSmEPKf50R8lUkqWOzDygYNeUf1u0LY576RsAre6ZaQy_xn_4SQmULiAid2FfdSF1Mewwc0vNdW2SNDMJkXP0tYQ"
         ];
 
-        // Token management system
-        class TokenManager {
-            constructor(tokens) {
-                this.tokens = tokens;
-                this.currentIndex = 0;
-                this.inUseTokens = new Map(); // Track which tokens are currently processing
+        function getUserIdentifier() {
+            // Get or create a unique user ID from localStorage
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('userId', userId);
             }
-
-            async getAvailableToken() {
-                const startIndex = this.currentIndex;
-                
-                do {
-                    const token = this.tokens[this.currentIndex];
-                    
-                    // If token isn't in use or hasn't been used in last 30 seconds
-                    if (!this.inUseTokens.has(token) || 
-                        (Date.now() - this.inUseTokens.get(token)) > 30000) {
-                        
-                        this.inUseTokens.set(token, Date.now());
-                        this.currentIndex = (this.currentIndex + 1) % this.tokens.length;
-                        return token;
-                    }
-                    
-                    this.currentIndex = (this.currentIndex + 1) % this.tokens.length;
-                    
-                    // If we've checked all tokens and come back to start
-                    if (this.currentIndex === startIndex) {
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-                    }
-                } while (true);
-            }
-
-            releaseToken(token) {
-                this.inUseTokens.delete(token);
-            }
+            return userId;
         }
 
-        const tokenManager = new TokenManager(API_TOKENS);
+        // Map to track which token is assigned to which user
+        const userTokenMap = new Map();
+        let lastTokenIndex = 0;
+
+        function getTokenForUser() {
+            const userId = getUserIdentifier();
+            
+            // If user already has a token assigned, return it
+            if (userTokenMap.has(userId)) {
+                return API_TOKENS[userTokenMap.get(userId)];
+            }
+            
+            // Assign new token to user
+            const tokenIndex = lastTokenIndex % API_TOKENS.length;
+            userTokenMap.set(userId, tokenIndex);
+            lastTokenIndex++;
+            
+            return API_TOKENS[tokenIndex];
+        }
+
+        // Replace getNextToken with getTokenForUser in your code
+        function getNextToken() {
+            return getTokenForUser();
+        }
 
         // Function to calculate SHA-256 hash of file
         async function calculateHash(file) {
@@ -202,93 +196,85 @@
         }
 
         async function uploadImage(file) {
-            let currentToken = null;
-            try {
-                currentToken = await tokenManager.getAvailableToken();
-                console.log('Starting upload for file:', file.name);
-                
-                // Step 1: Calculate hash
-                const hashVal = await calculateHash(file);
-                console.log('Calculated hash:', hashVal);
-                
-                // Step 1: Get pre-signed URL
-                console.log('Requesting pre-signed URL...');
-                const preSignResponse = await fetch("https://www.seaart.ai/api/v1/resource/uploadImageByPreSign", {
-                    method: "POST",
-                    headers: {
-                        "accept": "application/json, text/plain, */*",
-                        "accept-language": "en",
-                        "cache-control": "no-cache",
-                        "content-type": "application/json",
-                        "pragma": "no-cache",
-                        "token": currentToken,
-                        "x-app-id": "web_global_seaart",
-                        "x-browser-id": "d6829cc2da461ada7567e2ce1a2da45c",
-                        "x-device-id": "ac01d1e4-5940-48d8-bb0e-d6a76f06f597",
-                        "x-eyes": "true",
-                        "x-platform": "web"
-                    },
-                    body: JSON.stringify({
-                        content_type: file.type,
-                        file_name: file.name,
-                        file_size: file.size,
-                        category: 20,
-                        hash_val: hashVal
-                    })
-                });
+            console.log('Starting upload for file:', file.name);
+            
+            // Step 1: Calculate hash
+            const hashVal = await calculateHash(file);
+            console.log('Calculated hash:', hashVal);
+            
+            // Step 1: Get pre-signed URL
+            console.log('Requesting pre-signed URL...');
+            const preSignResponse = await fetch("https://www.seaart.ai/api/v1/resource/uploadImageByPreSign", {
+                method: "POST",
+                headers: {
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "en",
+                    "cache-control": "no-cache",
+                    "content-type": "application/json",
+                    "pragma": "no-cache",
+                    "token": getNextToken(),
+                    "x-app-id": "web_global_seaart",
+                    "x-browser-id": "d6829cc2da461ada7567e2ce1a2da45c",
+                    "x-device-id": "ac01d1e4-5940-48d8-bb0e-d6a76f06f597",
+                    "x-eyes": "true",
+                    "x-platform": "web"
+                },
+                body: JSON.stringify({
+                    content_type: file.type,
+                    file_name: file.name,
+                    file_size: file.size,
+                    category: 20,
+                    hash_val: hashVal
+                })
+            });
 
-                const preSignData = await preSignResponse.json();
-                console.log('Pre-signed URL response:', preSignData);
-                
-                if (preSignData.status.code !== 10000) {
-                    throw new Error(`Failed to get pre-signed URL: ${preSignData.status.msg}`);
-                }
-                
-                // Step 2: Upload to storage
-                console.log('Uploading to storage...');
-                const uploadResponse = await fetch(preSignData.data.pre_sign, {
-                    method: "PUT",
-                    headers: {
-                        "content-type": file.type,
-                    },
-                    body: file
-                });
-                console.log('Upload response:', uploadResponse);
-
-                if (!uploadResponse.ok) {
-                    throw new Error(`Upload failed with status: ${uploadResponse.status}`);
-                }
-
-                // Step 3: Confirm upload
-                console.log('Confirming upload...');
-                const confirmResponse = await fetch("https://www.seaart.ai/api/v1/resource/confirmImageUploadedByPreSign", {
-                    method: "POST",
-                    headers: {
-                        "content-type": "application/json",
-                        "token": currentToken,
-                        "x-app-id": "web_global_seaart",
-                        "x-platform": "web",
-                        "x-eyes": "true"
-                    },
-                    body: JSON.stringify({
-                        category: 20,
-                        file_id: preSignData.data.file_id
-                    })
-                });
-
-                const confirmData = await confirmResponse.json();
-                console.log('Confirm response:', confirmData);
-                
-                if (confirmData.status.code !== 10000) {
-                    throw new Error(`Confirmation failed: ${confirmData.status.msg}`);
-                }
-
-                return confirmData;
-            } finally {
-                if (currentToken) {
-                    tokenManager.releaseToken(currentToken);
-                }
+            const preSignData = await preSignResponse.json();
+            console.log('Pre-signed URL response:', preSignData);
+            
+            if (preSignData.status.code !== 10000) {
+                throw new Error(`Failed to get pre-signed URL: ${preSignData.status.msg}`);
             }
+            
+            // Step 2: Upload to storage
+            console.log('Uploading to storage...');
+            const uploadResponse = await fetch(preSignData.data.pre_sign, {
+                method: "PUT",
+                headers: {
+                    "content-type": file.type,
+                },
+                body: file
+            });
+            console.log('Upload response:', uploadResponse);
+
+            if (!uploadResponse.ok) {
+                throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+            }
+
+            // Step 3: Confirm upload
+            console.log('Confirming upload...');
+            const confirmResponse = await fetch("https://www.seaart.ai/api/v1/resource/confirmImageUploadedByPreSign", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                    "token": getNextToken(),
+                    "x-app-id": "web_global_seaart",
+                    "x-platform": "web",
+                    "x-eyes": "true"
+                },
+                body: JSON.stringify({
+                    category: 20,
+                    file_id: preSignData.data.file_id
+                })
+            });
+
+            const confirmData = await confirmResponse.json();
+            console.log('Confirm response:', confirmData);
+            
+            if (confirmData.status.code !== 10000) {
+                throw new Error(`Confirmation failed: ${confirmData.status.msg}`);
+            }
+
+            return confirmData;
         }
 
         let uploadedImages = {
@@ -330,14 +316,13 @@
         });
 
         // Add this function to get a fresh token
-        async function getFreshToken(oldToken) {
+        async function getFreshToken() {
             try {
                 const response = await fetch("https://www.seaart.ai/api/v1/user/token/refresh", {
                     method: "POST",
                     headers: {
                         "accept": "application/json, text/plain, */*",
                         "content-type": "application/json",
-                        "token": oldToken,
                         "x-app-id": "web_global_seaart",
                         "x-platform": "web",
                         "x-eyes": "true"
@@ -346,11 +331,6 @@
                 
                 const data = await response.json();
                 if (data.status?.code === 10000) {
-                    // Update token in the pool
-                    const tokenIndex = API_TOKENS.indexOf(oldToken);
-                    if (tokenIndex !== -1) {
-                        API_TOKENS[tokenIndex] = data.data.token;
-                    }
                     return data.data.token;
                 }
                 throw new Error('Failed to refresh token');
@@ -402,7 +382,7 @@
                         headers: {
                             "accept": "application/json, text/plain, */*",
                             "content-type": "application/json",
-                            "token": API_TOKEN,
+                            "token": getNextToken(),
                             "x-app-id": "web_global_seaart"
                         },
                         body: JSON.stringify({
@@ -478,27 +458,25 @@
         }
 
         async function uploadImages() {
-            let currentToken = null;
             try {
-                currentToken = await tokenManager.getAvailableToken();
-                
                 // Check if both images are uploaded
                 if (!uploadedImages.image1 || !uploadedImages.image2) {
                     throw new Error('Please upload both images first');
                 }
 
+                // Reset and show progress bar at 0%
                 await updateProgress(0);
                 
                 const response = await fetch("https://www.seaart.ai/api/v1/creativity/generate/apply", {
-                    headers: {
+                    "headers": {
                         "accept": "application/json, text/plain, */*",
                         "content-type": "application/json",
-                        "token": currentToken,
+                        "token": getNextToken(),
                         "x-app-id": "web_global_seaart"
                     },
-                    body: `{"apply_id":"cplv98le878c73br9rr0","inputs":[{"field":"image","node_id":"11","node_type":"LoadImage","val":"${uploadedImages.image1}"},{"field":"weight","node_id":"193","node_type":"IPAdapterAdvanced","val":0.5},{"field":"image","node_id":"25","node_type":"LoadImage","val":"${uploadedImages.image2}"},{"field":"weight","node_id":"192","node_type":"IPAdapterAdvanced","val":0.7000000000000001}]}`,
-                    method: "POST",
-                    mode: "cors"
+                    "body": `{"apply_id":"cplv98le878c73br9rr0","inputs":[{"field":"image","node_id":"11","node_type":"LoadImage","val":"${uploadedImages.image1}"},{"field":"weight","node_id":"193","node_type":"IPAdapterAdvanced","val":0.5},{"field":"image","node_id":"25","node_type":"LoadImage","val":"${uploadedImages.image2}"},{"field":"weight","node_id":"192","node_type":"IPAdapterAdvanced","val":0.7000000000000001}]}`,
+                    "method": "POST",
+                    "mode": "cors"
                 });
 
                 const data = await response.json();
@@ -516,13 +494,14 @@
                 await pollProgress(data.data.id);
 
             } catch (error) {
+                // Hide progress bar on error
                 document.getElementById('progressContainer').style.display = 'none';
-                console.error('Error details:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 alert('Fusion failed: ' + error.message);
-            } finally {
-                if (currentToken) {
-                    tokenManager.releaseToken(currentToken);
-                }
             }
         }
     </script>
