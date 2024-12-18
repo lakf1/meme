@@ -100,10 +100,41 @@
     </div>
 
     <script>
-        // Add these at the top of your JavaScript
-        const DEVICE_ID = 'ac01d1e4-5940-48d8-bb0e-d6a76f06f597';
-        const BROWSER_ID = 'd6829cc2da461ada7567e2ce1a2da45c';
-        const PAGE_ID = '640b6ece-4489-4c29-aaa3-ff06f1d4f1a1';
+        // Generate a UUID v4
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Generate browser fingerprint
+        function generateBrowserId() {
+            const browserInfo = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width,
+                screen.height,
+                new Date().getTimezoneOffset()
+            ].join('|');
+            
+            // Create a hash of the browser info
+            return Array.from(
+                new Uint8Array(
+                    new TextEncoder().encode(browserInfo)
+                )
+            ).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Generate the IDs once and store them in localStorage
+        const DEVICE_ID = localStorage.getItem('deviceId') || generateUUID();
+        const BROWSER_ID = localStorage.getItem('browserId') || generateBrowserId();
+        const PAGE_ID = generateUUID(); // New for each page load
+
+        // Store the persistent IDs
+        localStorage.setItem('deviceId', DEVICE_ID);
+        localStorage.setItem('browserId', BROWSER_ID);
 
         const API_TOKEN = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTczNDg4MywiaWF0IjoxNzM0NTUwODgzLCJqdGkiOiI1ODkzMDU4NzYxNTg5MjQ4NSIsInBheWxvYWQiOnsiaWQiOiI3NGQwNjUxNzc4Y2NkY2Y5YmViNzU1NWYyOWI2M2UwNSIsImVtYWlsIjoiZGF3MzFkYXdAZ21haWwuY29tIiwiY3JlYXRlX2F0IjoxNzM0NTUwODgxMDgxLCJ0b2tlbl9zdGF0dXMiOjAsInN0YXR1cyI6MSwiaXNzIjoiIn19.Ol1ruFWUEOnNiEWUerqKk6pPaw_m5tHMOK3odSdkF-DexNGQ5eGI_uM3w2Vp7dRiSiRjifb0Uga5qs9vM7sSiqAfvhGsq0ABvp8Xwmdb6ZRo3r36Sgi_q2_EXLSBp9Mlocz7pRu3DtISCEhgR2gdKvJ0gG8ejlkhTbWgK2ODo2MgFE7v4B2X7kFnbmh6mnR_TTYcMW99gCggEsKG8fEeu8osn_L_zOpM-qTjgc4b2fLBVEuLKwfUZF2FtjK-_nfy1bQuwP4gVFK8ypRUCY7lJSnZTDwZGvGFaIP4ifuSPR_8BywAQJVK77crek0M6Yfqch6siaac57V-LeyQZdEsZg";
 
@@ -142,7 +173,7 @@
                     "cache-control": "no-cache",
                     "content-type": "application/json",
                     "pragma": "no-cache",
-                    "token": "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTY1NjMyMiwiaWF0IjoxNzM0NDcyMzIyLCJqdGkiOiI1ODg0ODIxMDAyNzg0OTczMyIsInBheWxvYWQiOnsiaWQiOiIyODU5MjM0MjQ2OTYwOGJiYWRmODY5YWNkOGE0ZjBkOCIsImVtYWlsIjoicmdtb3RkQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDQ3MjMxOTIzNCwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.TYr_0-7o5rv-Ay3uuMYuSnEpmcxP7otNTvCM9c44t5_u_y4Br5KRcfKka7UvqG9n94Ts9ni2Ar2Q-o8hCvLRd7JqI-jwSq_lv5jrMYJSIuz6rQeMQHdKjK3ga8T-ZQM2838SfLGA9Qq_G6O9O_0CCwuQLnTI4X8Cxkj8Jlv-G-fohPwkc7y0fkaM9nFyp95cSJlra7hRjHLDpGVpnB98qpoctO1Sc5XOPAxQtRERML51rlgSY1W7H0uw8LneLrU-SgyRsMT57poGvO7Q6fW0JXPVmh53oXOPYPosYazBXOutFoR8JA-k223C2Ml423xrznHSrnKdA1FS0LGyRn56rQ",
+                    "token": API_TOKEN,
                     "x-app-id": "web_global_seaart",
                     "x-browser-id": "d6829cc2da461ada7567e2ce1a2da45c",
                     "x-device-id": "ac01d1e4-5940-48d8-bb0e-d6a76f06f597",
@@ -186,7 +217,7 @@
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
-                    "token": "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTY1NjMyMiwiaWF0IjoxNzM0NDcyMzIyLCJqdGkiOiI1ODg0ODIxMDAyNzg0OTczMyIsInBheWxvYWQiOnsiaWQiOiIyODU5MjM0MjQ2OTYwOGJiYWRmODY5YWNkOGE0ZjBkOCIsImVtYWlsIjoicmdtb3RkQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDQ3MjMxOTIzNCwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.TYr_0-7o5rv-Ay3uuMYuSnEpmcxP7otNTvCM9c44t5_u_y4Br5KRcfKka7UvqG9n94Ts9ni2Ar2Q-o8hCvLRd7JqI-jwSq_lv5jrMYJSIuz6rQeMQHdKjK3ga8T-ZQM2838SfLGA9Qq_G6O9O_0CCwuQLnTI4X8Cxkj8Jlv-G-fohPwkc7y0fkaM9nFyp95cSJlra7hRjHLDpGVpnB98qpoctO1Sc5XOPAxQtRERML51rlgSY1W7H0uw8LneLrU-SgyRsMT57poGvO7Q6fW0JXPVmh53oXOPYPosYazBXOutFoR8JA-k223C2Ml423xrznHSrnKdA1FS0LGyRn56rQ",
+                    "token": API_TOKEN,
                     "x-app-id": "web_global_seaart",
                     "x-platform": "web",
                     "x-eyes": "true"
