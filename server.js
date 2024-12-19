@@ -27,6 +27,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static('.'));
 
+// Add your tokens
+const API_TOKENS = [
+    "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTgwNjUwNiwiaWF0IjoxNzM0NjIyNTA2LCJqdGkiOiI1OTAwNTY5MDAwMjI5Mjc0MSIsInBheWxvYWQiOnsiaWQiOiIyODU5MjM0MjQ2OTYwOGJiYWRmODY5YWNkOGE0ZjBkOCIsImVtYWlsIjoicmdtb3RkQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDQ3MjMxOTIzNCwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.nMmubcUIevhJ2JwpQ70yy6imc59AHmAOOEXYtNvY1bDirhXMekncjQhz2kBad1lA97M66kvaX59Cqz5-B-HqAiQ20U6nT7p4xJ8AsF4yxTTXql_EAvn-gvrUn7guJLp7LPpe1Lj96GBtVgwcW88m6bGaZw38AemAeLaLjeq7VciT6n1f7Y9pkNyijHqkZLTV8BINs_BX3alMo3Mka7_njAx_ULkfI16Xu9cYVs2jZ7VR769WCAQeuJfz3F4u4ElNGr-gacGW8qzUfn2YxCjd57tZboyagc_4fWlujaofV4wC6ws7_XWLWCXGd_Hq6jgFwuIM7dYsLkm5Za1AvggB6g",
+];
+
 // Add timeout for token release (e.g., 5 minutes)
 const TOKEN_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
