@@ -2,8 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
+const API_URL = 'https://meme-8i7w.onrender.com';
 
-app.use(cors());
+app.use(cors({
+    origin: ['https://lakf1.github.io', 'http://localhost:5500'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static('.'));
 
