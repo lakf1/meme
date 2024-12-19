@@ -22,7 +22,11 @@ app.use(cors({
         'http://localhost:5500',
         'http://127.0.0.1:5500',
         'http://localhost:3000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'https://memorph.cloud',
+        'http://memorph.cloud',
+        'https://www.memorph.cloud',
+        'http://www.memorph.cloud'
     ],
     methods: ['GET', 'POST'],
     credentials: true
