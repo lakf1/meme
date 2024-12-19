@@ -113,9 +113,10 @@ app.get('/status', (req, res) => {
 
 app.post('/gallery', async (req, res) => {
     try {
-        const { imageUrl, sourceImages, timestamp } = req.body;
+        const { imageUrl, name, sourceImages, timestamp } = req.body;
         
         const newImage = new GalleryImage({
+            name: name || 'Untitled',
             resultImage: imageUrl,
             sourceImage1: sourceImages.image1,
             sourceImage2: sourceImages.image2,
@@ -125,7 +126,7 @@ app.post('/gallery', async (req, res) => {
         });
         
         await newImage.save();
-        console.log('Saved gallery image:', newImage); // Debug log
+        console.log('Saved gallery image:', newImage);
         res.json({ success: true });
     } catch (error) {
         console.error('Failed to save to gallery:', error);
