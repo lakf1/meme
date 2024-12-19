@@ -3,85 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Fusion</title>
+    <title>Memorph AI</title>
     <style>
+        :root {
+            --primary-color: #00ff88;
+            --secondary-color: #0d1117;
+            --accent-color: #2f80ed;
+            --text-color: #ffffff;
+            --border-radius: 12px;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background: linear-gradient(135deg, #13151a 0%, #1a1d24 100%);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 2rem;
         }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
         .upload-section {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
-        .preview {
-            width: 300px;
-            height: 300px;
-            border: 2px dashed #ccc;
-            margin: 10px 0;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
+
+        .image-input {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
-        .image-container {
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary-color);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .upload-content {
             display: flex;
             flex-direction: column;
-            gap: 20px;
             align-items: center;
-            padding: 20px;
+            gap: 1rem;
         }
-        
-        .result-image {
-            max-width: 512px;
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+
+        .upload-text {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .browse-btn {
+            color: var(--primary-color);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .browse-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .preview {
+            margin-top: 1rem;
+            max-height: 200px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: all 0.3s ease;
+        }
+
+        .preview:not(:empty) {
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+        }
+
+        .weight-control {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+        }
+
+        .weight-control label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .slider-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .weight-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .weight-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .weight-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .slider-value {
+            min-width: 40px;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             width: 100%;
-            border: 2px solid #ccc;
-            border-radius: 8px;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
 
         .progress-container {
-            width: 300px;
-            margin: 20px 0;
-            display: none;  /* Hidden by default */
+            width: 100%;
+            max-width: 300px;
+            margin: 2rem auto;
+            display: none;
         }
 
         .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background-color: #4CAF50;
-            width: 0%;
+            background: var(--primary-color);
             transition: width 0.3s ease;
+            width: 0%;
         }
 
         .progress-text {
             text-align: center;
-            margin-top: 5px;
-            font-family: Arial, sans-serif;
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .result-image {
+            max-width: 512px;
+            width: 100%;
+            border-radius: var(--border-radius);
+            margin: 2rem auto;
+            display: block;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .download-btn {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        .post-btn {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .button-icon {
+            font-size: 1.2rem;
+        }
+
+        .gallery-section {
+            margin-top: 4rem;
+            padding: 3rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-section h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .gallery {
+            max-width: 1900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2.5rem;
+            padding: 1rem;
+        }
+
+        .gallery-item {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-item-info {
+            padding: 1rem;
+            background: rgba(13, 17, 23, 0.95);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .close-button {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .close-button:hover {
+            opacity: 1;
+        }
+
+        .modal-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .source-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .source-image {
+            text-align: center;
+        }
+
+        .source-image img,
+        .result-image img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+        }
+
+        .source-image p {
+            margin: 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .modal h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Image Fusion</h1>
+        <h1>Memorph AI</h1>
         
         <div class="upload-section">
-            <div>
+            <div class="image-input">
                 <h3>Image 1</h3>
-                <input type="file" id="image1" accept="image/*">
-                <div id="preview1" class="preview"></div>
+                <div class="upload-area" id="uploadArea1">
+                    <input type="file" id="image1" accept="image/*" class="file-input" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <span>Drop your image here or</span>
+                            <label for="image1" class="browse-btn">Browse</label>
+                        </div>
+                    </div>
+                    <div id="preview1" class="preview"></div>
+                </div>
+                <div class="weight-control">
+                    <label for="weight1">Weight</label>
+                    <div class="slider-container">
+                        <input type="range" 
+                               id="weight1" 
+                               value="0.5" 
+                               min="0" 
+                               max="1" 
+                               step="0.05" 
+                               class="weight-slider">
+                        <div class="slider-value" id="weight1Value">0.5</div>
+                    </div>
+                </div>
             </div>
             
-            <div>
+            <div class="image-input">
                 <h3>Image 2</h3>
-                <input type="file" id="image2" accept="image/*">
-                <div id="preview2" class="preview"></div>
+                <div class="upload-area" id="uploadArea2">
+                    <input type="file" id="image2" accept="image/*" class="file-input" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <span>Drop your image here or</span>
+                            <label for="image2" class="browse-btn">Browse</label>
+                        </div>
+                    </div>
+                    <div id="preview2" class="preview"></div>
+                </div>
+                <div class="weight-control">
+                    <label for="weight2">Weight</label>
+                    <div class="slider-container">
+                        <input type="range" 
+                               id="weight2" 
+                               value="0.7" 
+                               min="0" 
+                               max="1" 
+                               step="0.05" 
+                               class="weight-slider">
+                        <div class="slider-value" id="weight2Value">0.7</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -99,7 +472,17 @@
         </div>
     </div>
 
+    <div class="gallery-section">
+        <h2>Gallery</h2>
+        <div id="gallery" class="gallery">
+            <!-- Gallery items will be loaded here -->
+        </div>
+    </div>
+
     <script>
+        // Add this at the start of your script
+        const API_URL = 'https://meme-8i7w.onrender.com';  // Change this when deploying
+
         // Generate a UUID v4
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -169,8 +552,9 @@
             }
         }
 
+        // Replace in token request
         async function getNextToken() {
-            const response = await fetch('http://localhost:3000/token');
+            const response = await fetch(`${API_URL}/token`);
             if (!response.ok) {
                 throw new Error('No tokens available');
             }
@@ -178,8 +562,9 @@
             return data.token;
         }
 
+        // Replace in release token
         async function releaseToken(token) {
-            await fetch('http://localhost:3000/release', {
+            await fetch(`${API_URL}/release`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -215,7 +600,9 @@
         function previewImage(file, previewId) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById(previewId).style.backgroundImage = `url(${e.target.result})`;
+                const preview = document.getElementById(previewId);
+                preview.style.height = '200px';  // Set a fixed height
+                preview.style.backgroundImage = `url(${e.target.result})`;
             }
             reader.readAsDataURL(file);
         }
@@ -317,16 +704,14 @@
         document.getElementById('image1').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if(file) {
-                console.log('Image 1 selected:', file);
-                previewImage(file, 'preview1');
+                previewImage(file, 'preview1');  // Show preview immediately
                 try {
                     const uploadResult = await uploadImage(file);
                     console.log('Image 1 upload completed:', uploadResult);
-                    uploadedImages.image1 = uploadResult.data.url; // Store the URL instead of file_id
-                    console.log('Stored image1 URL:', uploadedImages.image1);
+                    uploadedImages.image1 = uploadResult.data.url;
+                    console.log('Current uploadedImages state:', uploadedImages); // Debug log
                 } catch (error) {
                     console.error('Image 1 upload failed:', error);
-                    alert('Upload failed: ' + error.message);
                 }
             }
         });
@@ -334,14 +719,14 @@
         document.getElementById('image2').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if(file) {
-                previewImage(file, 'preview2');
+                previewImage(file, 'preview2');  // Show preview immediately
                 try {
                     const uploadResult = await uploadImage(file);
                     console.log('Image 2 upload completed:', uploadResult);
-                    uploadedImages.image2 = uploadResult.data.url; // Store the URL instead of file_id
+                    uploadedImages.image2 = uploadResult.data.url;
+                    console.log('Current uploadedImages state:', uploadedImages); // Debug log
                 } catch (error) {
                     console.error('Image 2 upload failed:', error);
-                    alert('Upload failed: ' + error.message);
                 }
             }
         });
@@ -437,16 +822,8 @@
                                         // Hide progress bar on completion
                                         document.getElementById('progressContainer').style.display = 'none';
                                         
-                                        // Create and display the image
-                                        const resultDiv = document.getElementById('result');
-                                        const img = document.createElement('img');
-                                        img.src = imageUrl;
-                                        img.className = 'result-image';
-                                        
-                                        // Clear previous results
-                                        resultDiv.innerHTML = '';
-                                        resultDiv.appendChild(img);
-                                        
+                                        // Show result with buttons
+                                        showResult(imageUrl);
                                         return;
                                     } else {
                                         console.error('Task completed but missing image URL. Full response:', JSON.stringify(taskResult, null, 2));
@@ -488,40 +865,70 @@
             throw new Error(`Polling timed out after ${maxAttempts} attempts`);
         }
 
-        const API_URL = 'https://meme-8i7w.onrender.com';
-
         async function uploadImages() {
+            const generateButton = document.querySelector('button');
+            
             try {
+                // Disable button and change text
+                generateButton.disabled = true;
+                generateButton.textContent = 'Generating...';
+                
                 if (!uploadedImages.image1 || !uploadedImages.image2) {
-                    throw new Error('Please upload both images first');
+                    console.error('Please upload both images first');
+                    return;
                 }
 
+                console.log('Starting image upload process...');
                 await updateProgress(0);
                 
-                // Get token from our server
+                // Get token
+                console.log('Requesting token...');
                 const tokenResponse = await fetch(`${API_URL}/token`);
+                console.log('Token response status:', tokenResponse.status);
                 if (!tokenResponse.ok) {
-                    throw new Error('No tokens available');
+                    console.error('No tokens available');
+                    return;
                 }
                 const tokenData = await tokenResponse.json();
-                const token = tokenData.token;
+                console.log('Token received successfully');
+
+                const weight1 = parseFloat(document.getElementById('weight1').value);
+                const weight2 = parseFloat(document.getElementById('weight2').value);
+                console.log('Using weights:', { weight1, weight2 });
 
                 const applyId = generateApplyId();
+                console.log('Generated applyId:', applyId);
                 
+                // Store current generation data
+                currentGeneration = {
+                    sourceImages: {
+                        image1: uploadedImages.image1,
+                        image2: uploadedImages.image2
+                    },
+                    weights: { weight1, weight2 }
+                };
+                
+                console.log('Making generate request with data:', {
+                    applyId,
+                    sourceImages: currentGeneration.sourceImages,
+                    weights: currentGeneration.weights
+                });
+
                 const response = await fetch("https://www.seaart.ai/api/v1/creativity/generate/apply", {
                         "headers": {
                             "accept": "application/json, text/plain, */*",
                             "content-type": "application/json",
-                            "token": token,
+                            "token": tokenData.token,
                             "x-app-id": "web_global_seaart"
                         },
-                        "body": `{"apply_id":"cplv98le878c73br9rr0","inputs":[{"field":"image","node_id":"11","node_type":"LoadImage","val":"${uploadedImages.image1}"},{"field":"weight","node_id":"193","node_type":"IPAdapterAdvanced","val":0.5},{"field":"image","node_id":"25","node_type":"LoadImage","val":"${uploadedImages.image2}"},{"field":"weight","node_id":"192","node_type":"IPAdapterAdvanced","val":0.7000000000000001}]}`,
+                        "body": `{"apply_id":"cplv98le878c73br9rr0","inputs":[{"field":"image","node_id":"11","node_type":"LoadImage","val":"${uploadedImages.image1}"},{"field":"weight","node_id":"193","node_type":"IPAdapterAdvanced","val":${currentGeneration.weights.weight1}},{"field":"image","node_id":"25","node_type":"LoadImage","val":"${uploadedImages.image2}"},{"field":"weight","node_id":"192","node_type":"IPAdapterAdvanced","val":${currentGeneration.weights.weight2}}]}`,
                         "method": "POST",
                         "mode": "cors"
                     });
 
+                console.log('Generate response status:', response.status);
                 const data = await response.json();
-                console.log('Generate response:', data);
+                console.log('Generate response data:', data);
 
                 if (data.status?.code !== 10000) {
                     // Release token if request fails
@@ -548,7 +955,7 @@
                 }
 
                 console.log('Starting to poll for task:', data.data.id);
-                await pollProgress(data.data.id, token);
+                await pollProgress(data.data.id, tokenData.token);
 
                 // Release token after everything is done
                 await fetch(`${API_URL}/release`, {
@@ -560,9 +967,249 @@
                 });
 
             } catch (error) {
-                document.getElementById('progressContainer').style.display = 'none';
-                console.error('Error:', error);
-                alert('Fusion failed: ' + error.message);
+                console.error('Error in uploadImages:', error);
+            } finally {
+                // Re-enable button and restore text
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate Image';
+            }
+        }
+
+        function setupWeightSliders() {
+            const sliders = document.querySelectorAll('.weight-slider');
+            
+            sliders.forEach(slider => {
+                const valueDisplay = slider.parentElement.querySelector('.slider-value');
+                
+                // Update on load
+                valueDisplay.textContent = slider.value;
+                
+                // Update on change
+                slider.addEventListener('input', (e) => {
+                    valueDisplay.textContent = e.target.value;
+                    // Add visual feedback
+                    valueDisplay.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        valueDisplay.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        }
+
+        function setupDragAndDrop() {
+            const uploadAreas = document.querySelectorAll('.upload-area');
+            
+            uploadAreas.forEach(area => {
+                const input = area.querySelector('input[type="file"]');
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    area.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    area.addEventListener(eventName, () => {
+                        area.classList.add('dragover');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    area.addEventListener(eventName, () => {
+                        area.classList.remove('dragover');
+                    });
+                });
+
+                area.addEventListener('drop', (e) => {
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        input.files = e.dataTransfer.files;
+                        // Trigger the change event manually
+                        const event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                });
+            });
+        }
+
+        // Initialize everything when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop();
+            setupWeightSliders();
+            loadGallery();
+        });
+
+        // Add these lines to your existing JavaScript
+        document.getElementById('weight1').addEventListener('input', function() {
+            document.getElementById('weight1Value').textContent = this.value;
+        });
+
+        document.getElementById('weight2').addEventListener('input', function() {
+            document.getElementById('weight2Value').textContent = this.value;
+        });
+
+        // Add this function to show result with buttons
+        function showResult(imageUrl) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <img src="${imageUrl}" class="result-image" alt="Generated image">
+                <div class="result-actions">
+                    <button onclick="downloadImage('${imageUrl}')" class="action-button download-btn">
+                        <span class="button-icon">⬇️</span> Download
+                    </button>
+                    <button onclick="postToGallery('${imageUrl}')" class="action-button post-btn">
+                        <span class="button-icon">📤</span> Post to Gallery
+                    </button>
+                </div>
+            `;
+        }
+
+        // Add these new functions
+        async function downloadImage(url) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = 'fusion-result.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                console.error('Download failed:', error);
+            }
+        }
+
+        // Replace in postToGallery
+        async function postToGallery(resultImageUrl) {
+            try {
+                console.log('Current uploadedImages when posting:', uploadedImages);
+                
+                if (!uploadedImages.image1 || !uploadedImages.image2) {
+                    console.error('Missing source images:', uploadedImages);
+                    alert('Missing source images data');
+                    return;
+                }
+
+                const galleryData = {
+                    imageUrl: resultImageUrl,
+                    sourceImages: {
+                        image1: uploadedImages.image1,
+                        image2: uploadedImages.image2,
+                        weight1: parseFloat(document.getElementById('weight1').value),
+                        weight2: parseFloat(document.getElementById('weight2').value)
+                    },
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('Posting to gallery with data:', galleryData);
+
+                const response = await fetch(`${API_URL}/gallery`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(galleryData)
+                });
+                
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('Gallery post response:', responseData);
+                    alert('Posted to gallery successfully!');
+                    loadGallery();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Failed to post to gallery:', errorText);
+                }
+            } catch (error) {
+                console.error('Failed to post to gallery:', error);
+            }
+        }
+
+        // Update loadGallery function
+        async function loadGallery() {
+            try {
+                const response = await fetch(`${API_URL}/gallery`);
+                const images = await response.json();
+                
+                const galleryDiv = document.getElementById('gallery');
+                galleryDiv.innerHTML = '';
+                
+                images.forEach((img) => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    item.style.cursor = 'pointer';
+                    
+                    item.innerHTML = `
+                        <img src="${img.resultImage}" alt="Gallery image">
+                        <div class="gallery-item-info">
+                            <span>${new Date(img.timestamp).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        const modal = document.createElement('div');
+                        Object.assign(modal.style, {
+                            position: 'fixed',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: '9999'
+                        });
+                        
+                        modal.innerHTML = `
+                            <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; max-width: 90%; position: relative;">
+                                <button style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                                
+                                <h3 style="color: white; text-align: center; margin-bottom: 15px;">Source Images</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                    <div style="text-align: center;">
+                                        <img src="${img.sourceImage1}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
+                                        <p style="color: white; margin-top: 10px;">Weight: ${img.weight1}</p>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <img src="${img.sourceImage2}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
+                                        <p style="color: white; margin-top: 10px;">Weight: ${img.weight2}</p>
+                                    </div>
+                                </div>
+                                
+                                <h3 style="color: white; text-align: center; margin-bottom: 15px;">Result</h3>
+                                <img src="${img.resultImage}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 4px;">
+                            </div>
+                        `;
+                        
+                        document.body.appendChild(modal);
+                        
+                        // Close button handler
+                        const closeBtn = modal.querySelector('button');
+                        closeBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            modal.remove();
+                        };
+                        
+                        // Click outside to close
+                        modal.onclick = (e) => {
+                            if (e.target === modal) {
+                                modal.remove();
+                            }
+                        };
+                    });
+                    
+                    galleryDiv.appendChild(item);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load gallery:', error);
             }
         }
     </script>

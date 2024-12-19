@@ -2,10 +2,25 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
-const API_URL = 'https://meme-8i7w.onrender.com';
+const mongoose = require('mongoose');
+const GalleryImage = require('./models/GalleryImage');
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB Atlas'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 app.use(cors({
-    origin: ['https://lakf1.github.io', 'http://localhost:5500'],
+    origin: [
+        'https://lakf1.github.io',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000'
+    ],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -15,14 +30,12 @@ app.use(express.static('.'));
 // Our simple in-memory database
 const tokens = [
     {
-        token: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NzYyMCwiaWF0IjoxNzM0NTYzNjIwLCJqdGkiOiI1ODk0Mzk0Mjk0MzU4NTI4NSIsInBheWxvYWQiOnsiaWQiOiI0YzBlOTE5ZmNjMzY4ZGRjMDNmMzQ5MmM2MGRhMmQ0ZCIsImVtYWlsIjoiOXNxcnQ5QGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDU2MTY0MDg5NiwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.qHn5ig9PuWlFYyY-pcmQYz4ciVv-Pl0mJDzTM0uqCyWDZd04qkm7iw39GdmF-q5AjRzaoqs0UL6U7dbgGpF8PLzXokQvX44jIJ5Mg38w8FxC15TeDvfKYj3V1O_l6kNKtG7snXu799Bja3EkUyI8ea_sJIQc5oGeJPkUuEvKfIP8lreA6Ljm31xDhNL-Nor2qQvjfPKwzPAfkBbYwrILLSF7-RMlp49xdwA63Eazp1yvBuwFiYjPvUviufH44lbhEA3oHVmJd_ah7IssFueknYP221KgS8_aV3Cq7TaLTxDwIYNyUkZMLdDtMl7PMwvCqTjVDsqYhli_uYV1wDI8dA",
-        inUse: false
-    },
-    {
-        token: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTc0NTcwOSwiaWF0IjoxNzM0NTYxNzA5LCJqdGkiOiI1ODk0MTkzOTYxNTAxMTg0NSIsInBheWxvYWQiOnsiaWQiOiIwYzdiYWRmYzZiMmFhMGNiNDVjYzZlNGRmMjI0YzJkOSIsImVtYWlsIjoiZXZvY2hrYTU1OUBnbWFpbC5jb20iLCJjcmVhdGVfYXQiOjE3MzQ1NjE3MDc5NzgsInRva2VuX3N0YXR1cyI6MCwic3RhdHVzIjoxLCJpc3MiOiIifX0.AI9vVAPQ0-5VPSbQJqsVifKQvTYDrpYOd5NDcvK52ofMVeu8sP3_dAsXuPIQ8R67CcnLXhb_FykRh9BbpVQ5bjsEFdCf4AEXEOczQamn8cjNOHhrarOALabZdzj-5siZLLtb08hv6lSLXVDs0qpZjZ_nqaofcLm2_Vc59BsrVIpEdu_kJdJ-La558TsakB_JSnCxRlfxrD_eTIENGgQO9GdR1J7ibcIAZDtEsicBrPzRL-P_AleWujB8tGwB-tkSmEPKf50R8lUkqWOzDygYNeUf1u0LY576RsAre6ZaQy_xn_4SQmULiAid2FfdSF1Mewwc0vNdW2SNDMJkXP0tYQ",
+        token: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTgwNjUwNiwiaWF0IjoxNzM0NjIyNTA2LCJqdGkiOiI1OTAwNTY5MDAwMjI5Mjc0MSIsInBheWxvYWQiOnsiaWQiOiIyODU5MjM0MjQ2OTYwOGJiYWRmODY5YWNkOGE0ZjBkOCIsImVtYWlsIjoicmdtb3RkQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDQ3MjMxOTIzNCwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.nMmubcUIevhJ2JwpQ70yy6imc59AHmAOOEXYtNvY1bDirhXMekncjQhz2kBad1lA97M66kvaX59Cqz5-B-HqAiQ20U6nT7p4xJ8AsF4yxTTXql_EAvn-gvrUn7guJLp7LPpe1Lj96GBtVgwcW88m6bGaZw38AemAeLaLjeq7VciT6n1f7Y9pkNyijHqkZLTV8BINs_BX3alMo3Mka7_njAx_ULkfI16Xu9cYVs2jZ7VR769WCAQeuJfz3F4u4ElNGr-gacGW8qzUfn2YxCjd57tZboyagc_4fWlujaofV4wC6ws7_XWLWCXGd_Hq6jgFwuIM7dYsLkm5Za1AvggB6g",
         inUse: false
     }
 ];
+
+const gallery = [];
 
 // Root route
 app.get('/', (req, res) => {
@@ -90,6 +103,39 @@ app.post('/release', (req, res) => {
     } else {
         console.log('\n!!! Token not found for release !!!\n');
         res.status(404).json({ error: 'Token not found' });
+    }
+});
+
+app.post('/gallery', async (req, res) => {
+    try {
+        const { imageUrl, sourceImages, timestamp } = req.body;
+        
+        const newImage = new GalleryImage({
+            resultImage: imageUrl,
+            sourceImage1: sourceImages.image1,
+            sourceImage2: sourceImages.image2,
+            weight1: sourceImages.weight1,
+            weight2: sourceImages.weight2,
+            timestamp: timestamp
+        });
+        
+        await newImage.save();
+        console.log('Saved gallery image:', newImage); // Debug log
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to save to gallery:', error);
+        res.status(500).json({ error: 'Failed to save to gallery' });
+    }
+});
+
+app.get('/gallery', async (req, res) => {
+    try {
+        const images = await GalleryImage.find().sort({ timestamp: -1 });
+        console.log('Retrieved gallery images:', images); // Debug log
+        res.json(images);
+    } catch (error) {
+        console.error('Failed to fetch gallery:', error);
+        res.status(500).json({ error: 'Failed to fetch gallery' });
     }
 });
 
