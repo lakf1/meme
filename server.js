@@ -27,83 +27,82 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static('.'));
 
-// Our simple in-memory database
-const tokens = [
-    {
-        token: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZWEtYXJ0IiwiYXVkIjpbImxvZ2luIl0sImV4cCI6MTczOTgwNjUwNiwiaWF0IjoxNzM0NjIyNTA2LCJqdGkiOiI1OTAwNTY5MDAwMjI5Mjc0MSIsInBheWxvYWQiOnsiaWQiOiIyODU5MjM0MjQ2OTYwOGJiYWRmODY5YWNkOGE0ZjBkOCIsImVtYWlsIjoicmdtb3RkQGdtYWlsLmNvbSIsImNyZWF0ZV9hdCI6MTczNDQ3MjMxOTIzNCwidG9rZW5fc3RhdHVzIjowLCJzdGF0dXMiOjEsImlzcyI6IiJ9fQ.nMmubcUIevhJ2JwpQ70yy6imc59AHmAOOEXYtNvY1bDirhXMekncjQhz2kBad1lA97M66kvaX59Cqz5-B-HqAiQ20U6nT7p4xJ8AsF4yxTTXql_EAvn-gvrUn7guJLp7LPpe1Lj96GBtVgwcW88m6bGaZw38AemAeLaLjeq7VciT6n1f7Y9pkNyijHqkZLTV8BINs_BX3alMo3Mka7_njAx_ULkfI16Xu9cYVs2jZ7VR769WCAQeuJfz3F4u4ElNGr-gacGW8qzUfn2YxCjd57tZboyagc_4fWlujaofV4wC6ws7_XWLWCXGd_Hq6jgFwuIM7dYsLkm5Za1AvggB6g",
-        inUse: false
-    }
-];
+// Add timeout for token release (e.g., 5 minutes)
+const TOKEN_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-const gallery = [];
+// Add timeout tracking
+const tokenTimeouts = new Map();
 
-// Root route
-app.get('/', (req, res) => {
-    console.log('Homepage accessed');
-    res.json({
-        status: 'running',
-        endpoints: {
-            'GET /token': 'Get a free token',
-            'POST /release': 'Release a token',
-            'GET /status': 'Check tokens status'
+// Update token management
+const tokens = API_TOKENS.map(token => ({ token, inUse: false }));
+
+// Add force release endpoint
+app.post('/force-release-all', (req, res) => {
+    tokens.forEach(token => {
+        token.inUse = false;
+        if (tokenTimeouts.has(token.token)) {
+            clearTimeout(tokenTimeouts.get(token.token));
+            tokenTimeouts.delete(token.token);
         }
     });
+    console.log('All tokens force released');
+    res.json({ message: 'All tokens released' });
 });
 
-// Get a free token
+// Update token request
 app.get('/token', (req, res) => {
-    const freeToken = tokens.find(t => !t.inUse);
-    if (freeToken) {
-        freeToken.inUse = true;
-        console.log('\n=== Token Acquired ===');
-        console.log('Token status:');
-        tokens.forEach((t, i) => {
-            console.log(`Token ${i + 1}: ${t.inUse ? 'IN USE' : 'FREE'}`);
-        });
-        console.log('==================\n');
-        res.json({ token: freeToken.token });
-    } else {
-        console.log('\n!!! All tokens are in use !!!\n');
-        res.status(503).json({ error: 'No tokens available' });
+    const availableToken = tokens.find(t => !t.inUse);
+    if (!availableToken) {
+        return res.status(503).json({ error: '!!! All tokens are in use !!!' });
     }
-});
 
-// Check tokens status
-app.get('/status', (req, res) => {
-    console.log('\n=== Status Check ===');
-    console.log('Total tokens:', tokens.length);
-    console.log('In use:', tokens.filter(t => t.inUse).length);
-    console.log('Available:', tokens.filter(t => !t.inUse).length);
-    tokens.forEach((t, i) => {
-        console.log(`Token ${i + 1}: ${t.inUse ? 'IN USE' : 'FREE'}`);
-    });
-    console.log('=================\n');
+    availableToken.inUse = true;
     
-    res.json({
-        total: tokens.length,
-        inUse: tokens.filter(t => t.inUse).length,
-        available: tokens.filter(t => !t.inUse).length,
-        tokens: tokens.map(t => ({ inUse: t.inUse }))
-    });
+    // Set automatic release timeout
+    const timeout = setTimeout(() => {
+        availableToken.inUse = false;
+        tokenTimeouts.delete(availableToken.token);
+        console.log(`Token auto-released after timeout: ${availableToken.token.substring(0, 10)}...`);
+    }, TOKEN_TIMEOUT);
+    
+    tokenTimeouts.set(availableToken.token, timeout);
+    
+    console.log(`Token assigned: ${availableToken.token.substring(0, 10)}...`);
+    res.json({ token: availableToken.token });
 });
 
-// Release a token
+// Update release endpoint
 app.post('/release', (req, res) => {
     const { token } = req.body;
-    const tokenObj = tokens.find(t => t.token === token);
-    if (tokenObj) {
-        tokenObj.inUse = false;
-        console.log('\n=== Token Released ===');
-        console.log('Token status:');
-        tokens.forEach((t, i) => {
-            console.log(`Token ${i + 1}: ${t.inUse ? 'IN USE' : 'FREE'}`);
-        });
-        console.log('===================\n');
-        res.json({ success: true });
-    } else {
-        console.log('\n!!! Token not found for release !!!\n');
-        res.status(404).json({ error: 'Token not found' });
+    
+    if (!token) {
+        return res.status(400).json({ error: 'Token is required' });
     }
+
+    const tokenObj = tokens.find(t => t.token === token);
+    if (!tokenObj) {
+        return res.status(404).json({ error: 'Token not found' });
+    }
+
+    // Clear any existing timeout
+    if (tokenTimeouts.has(token)) {
+        clearTimeout(tokenTimeouts.get(token));
+        tokenTimeouts.delete(token);
+    }
+
+    tokenObj.inUse = false;
+    console.log(`Token released: ${token.substring(0, 10)}...`);
+    res.json({ message: 'Token released' });
+});
+
+// Add status endpoint
+app.get('/status', (req, res) => {
+    const status = tokens.map(t => ({
+        token: t.token.substring(0, 10) + '...',
+        inUse: t.inUse,
+        hasTimeout: tokenTimeouts.has(t.token)
+    }));
+    res.json(status);
 });
 
 app.post('/gallery', async (req, res) => {

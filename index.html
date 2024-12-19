@@ -865,14 +865,38 @@
             throw new Error(`Polling timed out after ${maxAttempts} attempts`);
         }
 
+        // Add function to force release all tokens
+        async function forceReleaseAllTokens() {
+            try {
+                const response = await fetch(`${API_URL}/force-release-all`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    console.log('All tokens force released');
+                }
+            } catch (error) {
+                console.error('Failed to force release tokens:', error);
+            }
+        }
+
+        // Update uploadImages function error handling
         async function uploadImages() {
             const generateButton = document.querySelector('button');
+            let token = null;
             
             try {
-                // Disable button and change text
                 generateButton.disabled = true;
                 generateButton.textContent = 'Generating...';
-                
+
+                // Get token
+                const tokenResponse = await fetch(`${API_URL}/token`);
+                if (!tokenResponse.ok) {
+                    const error = await tokenResponse.json();
+                    throw new Error(error.error || 'Failed to get token');
+                }
+                const tokenData = await tokenResponse.json();
+                token = tokenData.token;
+
                 if (!uploadedImages.image1 || !uploadedImages.image2) {
                     console.error('Please upload both images first');
                     return;
@@ -881,17 +905,6 @@
                 console.log('Starting image upload process...');
                 await updateProgress(0);
                 
-                // Get token
-                console.log('Requesting token...');
-                const tokenResponse = await fetch(`${API_URL}/token`);
-                console.log('Token response status:', tokenResponse.status);
-                if (!tokenResponse.ok) {
-                    console.error('No tokens available');
-                    return;
-                }
-                const tokenData = await tokenResponse.json();
-                console.log('Token received successfully');
-
                 const weight1 = parseFloat(document.getElementById('weight1').value);
                 const weight2 = parseFloat(document.getElementById('weight2').value);
                 console.log('Using weights:', { weight1, weight2 });
@@ -918,7 +931,7 @@
                         "headers": {
                             "accept": "application/json, text/plain, */*",
                             "content-type": "application/json",
-                            "token": tokenData.token,
+                            "token": token,
                             "x-app-id": "web_global_seaart"
                         },
                         "body": `{"apply_id":"cplv98le878c73br9rr0","inputs":[{"field":"image","node_id":"11","node_type":"LoadImage","val":"${uploadedImages.image1}"},{"field":"weight","node_id":"193","node_type":"IPAdapterAdvanced","val":${currentGeneration.weights.weight1}},{"field":"image","node_id":"25","node_type":"LoadImage","val":"${uploadedImages.image2}"},{"field":"weight","node_id":"192","node_type":"IPAdapterAdvanced","val":${currentGeneration.weights.weight2}}]}`,
@@ -968,8 +981,16 @@
 
             } catch (error) {
                 console.error('Error in uploadImages:', error);
+                alert(error.message);
             } finally {
-                // Re-enable button and restore text
+                // Always try to release the token
+                if (token) {
+                    try {
+                        await releaseToken(token);
+                    } catch (releaseError) {
+                        console.error('Failed to release token:', releaseError);
+                    }
+                }
                 generateButton.disabled = false;
                 generateButton.textContent = 'Generate Image';
             }
