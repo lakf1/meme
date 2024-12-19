@@ -488,6 +488,8 @@
             throw new Error(`Polling timed out after ${maxAttempts} attempts`);
         }
 
+        const API_URL = 'https://meme-8i7w.onrender.com';
+
         async function uploadImages() {
             try {
                 if (!uploadedImages.image1 || !uploadedImages.image2) {
@@ -497,7 +499,7 @@
                 await updateProgress(0);
                 
                 // Get token from our server
-                const tokenResponse = await fetch('http://localhost:3000/token');
+                const tokenResponse = await fetch(`${API_URL}/token`);
                 if (!tokenResponse.ok) {
                     throw new Error('No tokens available');
                 }
@@ -523,7 +525,7 @@
 
                 if (data.status?.code !== 10000) {
                     // Release token if request fails
-                    await fetch('http://localhost:3000/release', {
+                    await fetch(`${API_URL}/release`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -535,7 +537,7 @@
 
                 if (!data.data?.id) {
                     // Release token if no task ID
-                    await fetch('http://localhost:3000/release', {
+                    await fetch(`${API_URL}/release`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -549,7 +551,7 @@
                 await pollProgress(data.data.id, token);
 
                 // Release token after everything is done
-                await fetch('http://localhost:3000/release', {
+                await fetch(`${API_URL}/release`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
