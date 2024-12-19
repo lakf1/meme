@@ -5,6 +5,9 @@ const port = process.env.PORT || 3000;
 const mongoose = require('mongoose');
 const GalleryImage = require('./models/GalleryImage');
 require('dotenv').config();
+const WebSocket = require('ws');
+const server = require('http').createServer(app);
+const wss = new WebSocket.Server({ server });
 
 mongoose.connect("mongodb+srv://rgmotd:ewqirtjhq2541@cluster0.srsxi.mongodb.net/image-fusion?retryWrites=true&w=majority&appName=Cluster0", {
     useNewUrlParser: true,
@@ -111,6 +114,19 @@ app.get('/status', (req, res) => {
     res.json(status);
 });
 
+// Keep track of all connected clients
+const clients = new Set();
+
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+    clients.add(ws);
+    
+    ws.on('close', () => {
+        clients.delete(ws);
+    });
+});
+
+// Modify your gallery post endpoint to broadcast new images
 app.post('/gallery', async (req, res) => {
     try {
         const { imageUrl, name, sourceImages, timestamp } = req.body;
@@ -126,7 +142,27 @@ app.post('/gallery', async (req, res) => {
         });
         
         await newImage.save();
-        console.log('Saved gallery image:', newImage);
+        
+        // Broadcast the new image to all connected clients
+        const broadcastData = JSON.stringify({
+            type: 'newImage',
+            data: {
+                name: newImage.name,
+                resultImage: newImage.resultImage,
+                sourceImage1: newImage.sourceImage1,
+                sourceImage2: newImage.sourceImage2,
+                weight1: newImage.weight1,
+                weight2: newImage.weight2,
+                timestamp: newImage.timestamp
+            }
+        });
+        
+        clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(broadcastData);
+            }
+        });
+        
         res.json({ success: true });
     } catch (error) {
         console.error('Failed to save to gallery:', error);
@@ -145,12 +181,7 @@ app.get('/gallery', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`\n=== Token Server Started ===`);
+// Update server startup
+server.listen(port, () => {
     console.log(`Server running on port ${port}`);
-    console.log('Initial token status:');
-    tokens.forEach((t, i) => {
-        console.log(`Token ${i + 1}: ${t.inUse ? 'IN USE' : 'FREE'}`);
-    });
-    console.log('=======================\n');
 });

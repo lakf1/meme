@@ -1168,15 +1168,15 @@
         async function postToGallery(resultImageUrl) {
             try {
                 const postButton = document.querySelector('.post-btn');
+                postButton.disabled = true;
+                postButton.style.opacity = '0.5';
+                postButton.style.cursor = 'not-allowed';
                 
-                // Check if image was already posted
+                // Check for duplicates
                 const galleryImages = document.querySelectorAll('.gallery-item img');
                 for (let img of galleryImages) {
                     if (img.src === resultImageUrl) {
                         showSnackbar('This image is already in the gallery', 'error');
-                        postButton.disabled = true;
-                        postButton.style.opacity = '0.5';
-                        postButton.style.cursor = 'not-allowed';
                         return;
                     }
                 }
@@ -1191,6 +1191,9 @@
                     setTimeout(() => {
                         nameInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                     }, 2000);
+                    postButton.disabled = false;
+                    postButton.style.opacity = '1';
+                    postButton.style.cursor = 'pointer';
                     return;
                 }
 
@@ -1215,104 +1218,22 @@
                 });
                 
                 if (response.ok) {
-                    const responseData = await response.json();
-                    console.log('Gallery post response:', responseData);
-                    
-                    // Create and prepend the new gallery item immediately
-                    const galleryDiv = document.getElementById('gallery');
-                    const newItem = document.createElement('div');
-                    newItem.className = 'gallery-item';
-                    newItem.style.cursor = 'pointer';
-                    
-                    // Add animation class for smooth entry
-                    newItem.style.animation = 'fadeInSlideDown 0.5s ease-out';
-                    
-                    newItem.innerHTML = `
-                        <img src="${resultImageUrl}" alt="Gallery image">
-                        <div class="gallery-item-info">
-                            <span>${imageName}</span><br>
-                            <span>${new Date().toLocaleDateString()}</span>
-                        </div>
-                    `;
-                    
-                    // Add click handler for modal
-                    newItem.addEventListener('click', () => {
-                        const modal = document.createElement('div');
-                        Object.assign(modal.style, {
-                            position: 'fixed',
-                            top: '0',
-                            left: '0',
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            zIndex: '9999'
-                        });
-                        
-                        modal.innerHTML = `
-                            <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; max-width: 90%; position: relative;">
-                                <button style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                                
-                                <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">${imageName}</h2>
-                                
-                                <h3 style="color: white; text-align: center; margin-bottom: 15px;">Source Images</h3>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                                    <div style="text-align: center;">
-                                        <img src="${uploadedImages.image1}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
-                                        <p style="color: white; margin-top: 10px;">Weight: ${galleryData.sourceImages.weight1}</p>
-                                    </div>
-                                    <div style="text-align: center;">
-                                        <img src="${uploadedImages.image2}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
-                                        <p style="color: white; margin-top: 10px;">Weight: ${galleryData.sourceImages.weight2}</p>
-                                    </div>
-                                </div>
-                                
-                                <h3 style="color: white; text-align: center; margin-bottom: 15px;">Result</h3>
-                                <img src="${resultImageUrl}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 4px;">
-                            </div>
-                        `;
-                        
-                        document.body.appendChild(modal);
-                        
-                        const closeBtn = modal.querySelector('button');
-                        closeBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            modal.remove();
-                        };
-                        
-                        modal.onclick = (e) => {
-                            if (e.target === modal) {
-                                modal.remove();
-                            }
-                        };
-                    });
-                    
-                    // Add the new item at the start of the gallery
-                    if (galleryDiv.firstChild) {
-                        galleryDiv.insertBefore(newItem, galleryDiv.firstChild);
-                    } else {
-                        galleryDiv.appendChild(newItem);
-                    }
-                    
-                    // Clear the input
+                    // Don't add to gallery here - wait for WebSocket broadcast
                     nameInput.value = '';
-                    
-                    // Disable the post button
-                    postButton.disabled = true;
-                    postButton.style.opacity = '0.5';
-                    postButton.style.cursor = 'not-allowed';
-                    
                     showSnackbar('Image posted successfully! 🎨');
-                    
                 } else {
                     console.error('Failed to post to gallery:', await response.text());
                     showSnackbar('Failed to post image', 'error');
+                    postButton.disabled = false;
+                    postButton.style.opacity = '1';
+                    postButton.style.cursor = 'pointer';
                 }
             } catch (error) {
                 console.error('Failed to post to gallery:', error);
                 showSnackbar('Something went wrong', 'error');
+                postButton.disabled = false;
+                postButton.style.opacity = '1';
+                postButton.style.cursor = 'pointer';
             }
         }
 
@@ -1417,6 +1338,131 @@
                 snackbar.classList.remove('show');
             }, 2000);
         }
+
+        // Add this at the start of your script
+        let ws;
+
+        function connectWebSocket() {
+            // Create WebSocket URL from API_URL
+            const wsUrl = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'newImage') {
+                        // Check if image already exists in gallery
+                        const galleryImages = document.querySelectorAll('.gallery-item img');
+                        for (let img of galleryImages) {
+                            if (img.src === data.data.resultImage) {
+                                return; // Skip if image already exists
+                            }
+                        }
+                        // Add new image only if it doesn't exist
+                        addNewImageToGallery(data.data);
+                    }
+                };
+                
+                ws.onclose = () => {
+                    console.log('WebSocket connection closed. Trying to reconnect...');
+                    setTimeout(connectWebSocket, 5000);
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+            }
+        }
+
+        // Separate function to add new images to gallery
+        function addNewImageToGallery(imageData) {
+            const galleryDiv = document.getElementById('gallery');
+            const newItem = document.createElement('div');
+            newItem.className = 'gallery-item';
+            newItem.style.cursor = 'pointer';
+            newItem.style.animation = 'fadeInSlideDown 0.5s ease-out';
+            
+            newItem.innerHTML = `
+                <img src="${imageData.resultImage}" alt="Gallery image">
+                <div class="gallery-item-info">
+                    <span>${imageData.name}</span><br>
+                    <span>${new Date(imageData.timestamp).toLocaleDateString()}</span>
+                </div>
+            `;
+            
+            // Add click handler for modal
+            newItem.addEventListener('click', () => createImageModal(imageData));
+            
+            if (galleryDiv.firstChild) {
+                galleryDiv.insertBefore(newItem, galleryDiv.firstChild);
+            } else {
+                galleryDiv.appendChild(newItem);
+            }
+            
+            showSnackbar('New image added to gallery! 🎨');
+        }
+
+        // Separate function to create modal
+        function createImageModal(imageData) {
+            const modal = document.createElement('div');
+            Object.assign(modal.style, {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: '9999'
+            });
+            
+            modal.innerHTML = `
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; max-width: 90%; position: relative;">
+                    <button style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                    
+                    <h2 style="color: var(--primary-color); text-align: center; margin-bottom: 20px;">${imageData.name}</h2>
+                    
+                    <h3 style="color: white; text-align: center; margin-bottom: 15px;">Source Images</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="text-align: center;">
+                            <img src="${imageData.sourceImage1}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
+                            <p style="color: white; margin-top: 10px;">Weight: ${imageData.weight1}</p>
+                        </div>
+                        <div style="text-align: center;">
+                            <img src="${imageData.sourceImage2}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 4px;">
+                            <p style="color: white; margin-top: 10px;">Weight: ${imageData.weight2}</p>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: white; text-align: center; margin-bottom: 15px;">Result</h3>
+                    <img src="${imageData.resultImage}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 4px;">
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const closeBtn = modal.querySelector('button');
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                modal.remove();
+            };
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+
+        // Initialize WebSocket connection when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+        });
     </script>
 </body>
 </html>
