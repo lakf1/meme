@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const GalleryImage = require('./models/GalleryImage');
 require('dotenv').config();
 
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect("mongodb+srv://rgmotd:ewqirtjhq2541@cluster0.srsxi.mongodb.net/image-fusion?retryWrites=true&w=majority&appName=Cluster0", {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
