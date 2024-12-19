@@ -1220,7 +1220,7 @@
                 if (response.ok) {
                     // Don't add to gallery here - wait for WebSocket broadcast
                     nameInput.value = '';
-                    showSnackbar('Image posted successfully! 🎨');
+                    showSnackbar('Image posted successfully!');
                 } else {
                     console.error('Failed to post to gallery:', await response.text());
                     showSnackbar('Failed to post image', 'error');
@@ -1401,8 +1401,6 @@
             } else {
                 galleryDiv.appendChild(newItem);
             }
-            
-            showSnackbar('New image added to gallery! 🎨');
         }
 
         // Separate function to create modal
